@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIR Dictionary — Google It</title>
+<style>
+:root{--bg:#0f1419;--card:#1a2332;--text:#e8eef7;--muted:#8b9bb4;--accent:#5b9fd4;--border:#2a3548}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:560px;margin:0 auto;padding:1.2rem}
+.logo{text-align:center;margin-bottom:1rem}
+.logo .air{font-size:2.4rem;font-weight:800;letter-spacing:-0.03em;line-height:1;color:#5b9fd4}
+.logo .dict{font-size:1.1rem;font-weight:600;color:#e8eef7;margin-top:0.1rem;letter-spacing:0.04em}
+.sub{color:var(--muted);font-size:.85rem;margin-top:.45rem}
+.modes{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:0.8rem 0 1rem}
+.modes a{padding:.35rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--accent);text-decoration:none;font-size:.82rem;font-weight:600}
+.modes a.active{background:var(--accent);color:#041018;border-color:var(--accent)}
+.search{display:flex;gap:.5rem;margin-bottom:.8rem}
+#q{flex:1;padding:.75rem 1rem;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:1.05rem}
+button#go{padding:.75rem 1.1rem;border:0;border-radius:12px;background:var(--accent);color:#041018;font-weight:700;cursor:pointer}
+#status{color:var(--muted);font-size:.85rem;margin-bottom:.75rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem;position:relative}
+.word{font-size:1.8rem;font-weight:800}
+.gcard a{display:block;padding:.7rem 1rem;margin:.4rem 0;border-radius:10px;border:1px solid var(--border);background:#121a24;color:var(--accent);text-decoration:none;font-weight:600;font-size:.95rem}
+.gcard a:hover{background:#1e2a3a}
+.hint{color:var(--muted);font-size:.8rem;margin:.6rem 0 .4rem}
+.egg{position:absolute;top:10px;right:12px;font-size:1.6rem}
+footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:2rem}
+footer a{color:var(--accent)}
+</style></head><body>
+<div class="wrap">
+  <div class="logo">
+    <div class="air"><span style="font-family:system-ui,sans-serif">Λ</span>IR</div>
+    <div class="dict">Dictionary</div>
+    <div class="sub"><strong style="color:#e88a8a">Made with AI</strong> · Google It mode</div>
+  </div>
+  <div class="modes">
+    <a href="index.html">Lite</a>
+    <a href="full.html">Full</a>
+    <a href="google.html" class="active">Google It</a>
+  </div>
+  <div class="search"><input id="q" type="search" placeholder="Type any word..." autofocus><button id="go">Google It</button></div>
+  <div id="status">Type a word — every result is a Google link</div>
+  <div id="out"></div>
+  <footer>AIR Dictionary · Google It · <a href="index.html">Lite</a> · <a href="full.html">Full</a></footer>
+</div>
+<script>
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function gq(x){return 'https://www.google.com/search?q='+encodeURIComponent(x);}
+function easterEgg(w){
+  const ch=(w||'')[0]?.toLowerCase();
+  if(ch==='e') return '<span class="egg" title="Easter egg!">🥚</span>';
+  if(ch==='c') return '<span class="egg" title="Christmas!">🎀</span>';
+  if(ch==='s') return '<span class="egg" title="Soccer ball!">⚽</span>';
+  if(ch==='t') return '<span class="egg" title="Truck!">🚚</span>';
+  return '';
+}
+function search(){
+  const term=(document.getElementById('q').value||'').trim();
+  const out=document.getElementById('out');
+  const status=document.getElementById('status');
+  if(!term){out.innerHTML='';status.textContent='Type a word — every result is a Google link';return;}
+  status.textContent='Click any link to search Google';
+  let h='<div class="card gcard">'+easterEgg(term)+'<div class="word">'+esc(term)+'</div>';
+  h+='<p class="hint">Everything below opens Google:</p>';
+  h+='<a href="'+gq(term+' definition')+'" target="_blank" rel="noopener">🔍 Definition of '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' meaning')+'" target="_blank" rel="noopener">🔍 Meaning of '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' sentence example')+'" target="_blank" rel="noopener">🔍 Example sentence for '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' synonyms')+'" target="_blank" rel="noopener">🔍 Synonyms for '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' antonyms')+'" target="_blank" rel="noopener">🔍 Antonyms for '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' etymology origin')+'" target="_blank" rel="noopener">🔍 Origin of '+esc(term)+'</a>';
+  h+='<a href="'+gq(term+' pronunciation')+'" target="_blank" rel="noopener">🔍 How to pronounce '+esc(term)+'</a>';
+  h+='<a href="'+gq(term)+'" target="_blank" rel="noopener">🔍 Just Google: '+esc(term)+'</a>';
+  h+='</div>';
+  out.innerHTML=h;
+}
+document.getElementById('go').addEventListener('click',search);
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+</script></body></html>

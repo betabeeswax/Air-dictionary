@@ -1,1 +1,400 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AIR Dictionary — Mini Games</title></head><body><p>Loading full games file failed in tool - please upload games.html manually from download.</p><p><a href="index.html">Back to Lite</a></p></body></html>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIR Dictionary — Mini Games</title>
+<style>
+:root{--bg:#0f1419;--card:#1a2332;--text:#e8eef7;--muted:#8b9bb4;--accent:#5b9fd4;--syn:#6bcf9a;--border:#2a3548}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:680px;margin:0 auto;padding:1.2rem}
+.logo{text-align:center;margin-bottom:.6rem}
+.logo .air{font-size:2rem;font-weight:800;color:#5b9fd4}
+.logo .dict{font-size:1rem;font-weight:600;color:#e8eef7}
+.modes{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:0.5rem 0 1rem}
+.modes a{padding:.35rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--accent);text-decoration:none;font-size:.82rem;font-weight:600}
+.modes a.active{background:var(--accent);color:#041018}
+h1{font-size:1.15rem;text-align:center;margin:0 0 .8rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.gbtn{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.85rem;cursor:pointer;text-align:left;color:var(--text)}
+.gbtn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.gbtn .ico{font-size:1.35rem}
+.gbtn .name{font-weight:700;margin-top:.25rem;font-size:.92rem}
+.gbtn .desc{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+#play{display:none;margin-top:.8rem}
+#playBar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem}
+#playBar button{padding:.4rem .8rem;border:0;border-radius:8px;background:var(--border);color:var(--text);cursor:pointer;font-weight:600}
+#playTitle{font-weight:700;color:var(--accent)}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+canvas{background:#0a0e14;border-radius:8px;display:block;margin:0 auto;max-width:100%;image-rendering:pixelated}
+.row{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:.5rem}
+.row button,.panel>button{padding:.45rem .75rem;border:0;border-radius:8px;background:var(--accent);color:#041018;font-weight:700;cursor:pointer}
+.score,.msg{color:var(--muted);font-size:.9rem;margin-top:.4rem}
+.msg{color:var(--text)}
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;max-width:280px;margin:0 auto}
+.mem button{aspect-ratio:1;border:0;border-radius:8px;background:#243044;color:var(--text);font-size:1.25rem;cursor:pointer}
+.mem button.done{opacity:.65}
+.ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-width:200px;margin:0 auto}
+.ttt button{aspect-ratio:1;border:0;border-radius:8px;background:#243044;color:var(--text);font-size:1.5rem;font-weight:800;cursor:pointer}
+input[type=number],input[type=text]{padding:.5rem;border-radius:8px;border:1px solid var(--border);background:#121a24;color:var(--text);width:130px;text-align:center}
+footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:1.5rem}
+footer a{color:var(--accent)}
+</style></head><body>
+<div class="wrap">
+  <div class="logo"><div class="air">ΛIR</div><div class="dict">Dictionary</div></div>
+  <div class="modes">
+    <a href="index.html">Lite</a>
+    <a href="full.html">Full</a>
+    <a href="google.html">Google It</a>
+    <a href="games.html" class="active">Games</a>
+  </div>
+  <h1>20 Mini Games</h1>
+  <div class="grid" id="menu"></div>
+  <div id="play">
+    <div id="playBar"><span id="playTitle"></span><button type="button" id="backBtn">← Games</button></div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <footer><a href="index.html">Back to Lite Dictionary</a></footer>
+</div>
+<script>
+const GAMES=[
+  {id:'platform',ico:'🟩',name:'Platformer',desc:'Jump & collect coins'},
+  {id:'snake',ico:'🐍',name:'Snake',desc:'Classic snake'},
+  {id:'memory',ico:'🧠',name:'Memory',desc:'Match pairs'},
+  {id:'ttt',ico:'⭕',name:'Tic Tac Toe',desc:'Vs computer'},
+  {id:'rps',ico:'✊',name:'RPS',desc:'Rock paper scissors'},
+  {id:'guess',ico:'🔢',name:'Number Guess',desc:'1 to 50'},
+  {id:'react',ico:'⚡',name:'Reaction',desc:'Click on green'},
+  {id:'whack',ico:'🐹',name:'Whack-a-Mole',desc:'Tap moles'},
+  {id:'clicker',ico:'👆',name:'Speed Click',desc:'10 second rush'},
+  {id:'color',ico:'🎨',name:'Color Match',desc:'Name the color'},
+  {id:'type',ico:'⌨️',name:'Type Race',desc:'Type fast'},
+  {id:'pong',ico:'🏓',name:'Pong',desc:'Bounce the ball'},
+  {id:'breakout',ico:'🧱',name:'Breakout',desc:'Break the bricks'},
+  {id:'flappy',ico:'🐤',name:'Flappy',desc:'Tap to flap'},
+  {id:'dodge',ico:'☄️',name:'Dodge',desc:'Avoid falling rocks'},
+  {id:'aim',ico:'🎯',name:'Target Aim',desc:'Hit the targets'},
+  {id:'math',ico:'➕',name:'Math Blitz',desc:'Quick math'},
+  {id:'simon',ico:'🔔',name:'Simon',desc:'Repeat the pattern'},
+  {id:'maze',ico:'🌀',name:'Maze Run',desc:'Find the exit'},
+  {id:'slider',ico:'🧩',name:'Slide Puzzle',desc:'3x3 puzzle'}
+];
+const menu=document.getElementById('menu'), play=document.getElementById('play'), panel=document.getElementById('panel'), playTitle=document.getElementById('playTitle');
+let timer=null, raf=null, keys={};
+function clearT(){ if(timer) clearInterval(timer); if(raf) cancelAnimationFrame(raf); timer=null; raf=null; window.onkeydown=null; window.onkeyup=null; }
+document.getElementById('backBtn').onclick=()=>{ clearT(); play.style.display='none'; menu.style.display='grid'; };
+GAMES.forEach(g=>{
+  const b=document.createElement('button'); b.className='gbtn';
+  b.innerHTML=`<div class="ico">${g.ico}</div><div class="name">${g.name}</div><div class="desc">${g.desc}</div>`;
+  b.onclick=()=>{ clearT(); menu.style.display='none'; play.style.display='block'; playTitle.textContent=g.name; FUNCS[g.id](); };
+  menu.appendChild(b);
+});
+function canvas(w=320,h=240){ panel.innerHTML=`<canvas id="c" width="${w}" height="${h}"></canvas><div class="score" id="sc"></div><div class="row" id="ctrls"></div>`; return document.getElementById('c'); }
+function sc(t){ const e=document.getElementById('sc'); if(e) e.textContent=t; }
+
+const FUNCS={
+platform(){
+  const c=canvas(360,240), ctx=c.getContext('2d');
+  document.getElementById('ctrls').innerHTML='<span style="color:var(--muted);font-size:.8rem">← → move · Space / ↑ jump</span>';
+  const grav=0.45, plats=[{x:0,y:220,w:360,h:20},{x:40,y:170,w:80,h:12},{x:160,y:130,w:80,h:12},{x:260,y:90,w:70,h:12},{x:80,y:70,w:60,h:12}];
+  let p={x:30,y:180,vx:0,vy:0,w:14,h:18,on:false}, coins=[{x:70,y:150},{x:190,y:110},{x:290,y:70},{x:100,y:50}], score=0, win=false;
+  keys={};
+  window.onkeydown=e=>{ keys[e.key]=true; if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key)) e.preventDefault(); };
+  window.onkeyup=e=>{ keys[e.key]=false; };
+  function loop(){
+    if(win){ sc('You win! Coins: '+score); return; }
+    p.vx=0;
+    if(keys['ArrowLeft']||keys['a']) p.vx=-3;
+    if(keys['ArrowRight']||keys['d']) p.vx=3;
+    if((keys[' ']||keys['ArrowUp']||keys['w']) && p.on) p.vy=-8;
+    p.vy+=grav; p.x+=p.vx; p.y+=p.vy; p.on=false;
+    if(p.x<0) p.x=0; if(p.x+p.w>360) p.x=360-p.w;
+    plats.forEach(pl=>{
+      if(p.x+p.w>pl.x && p.x<pl.x+pl.w && p.y+p.h>pl.y && p.y+p.h<pl.y+pl.h+12 && p.vy>=0){ p.y=pl.y-p.h; p.vy=0; p.on=true; }
+    });
+    if(p.y>240){ p.x=30; p.y=180; p.vy=0; }
+    coins=coins.filter(co=>{ if(Math.abs(p.x+7-co.x)<12 && Math.abs(p.y+9-co.y)<14){ score++; return false;} return true; });
+    if(!coins.length) win=true;
+    ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,360,240);
+    ctx.fillStyle='#2a3548'; plats.forEach(pl=>ctx.fillRect(pl.x,pl.y,pl.w,pl.h));
+    ctx.fillStyle='#e8d44d'; coins.forEach(co=>{ ctx.beginPath(); ctx.arc(co.x,co.y,6,0,6.28); ctx.fill(); });
+    ctx.fillStyle='#5b9fd4'; ctx.fillRect(p.x,p.y,p.w,p.h);
+    sc('Coins: '+score+'/4 · Get all coins!');
+    raf=requestAnimationFrame(loop);
+  }
+  loop();
+},
+
+snake(){
+  const c=canvas(320,256), ctx=c.getContext('2d'), S=16, C=20, R=16;
+  document.getElementById('ctrls').innerHTML='<button data-d="u">↑</button><button data-d="l">←</button><button data-d="d">↓</button><button data-d="r">→</button><button id="rs">Restart</button>';
+  let snake=[{x:10,y:8}], dir={x:1,y:0}, food={x:15,y:8}, score=0, alive=true;
+  function place(){ food={x:Math.floor(Math.random()*C),y:Math.floor(Math.random()*R)}; if(snake.some(s=>s.x===food.x&&s.y===food.y)) place(); }
+  function draw(){ ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,320,256); ctx.fillStyle='#6bcf9a'; snake.forEach(s=>ctx.fillRect(s.x*S+1,s.y*S+1,S-2,S-2)); ctx.fillStyle='#5b9fd4'; ctx.fillRect(food.x*S+1,food.y*S+1,S-2,S-2); sc('Score: '+score+(alive?'':' — Game over')); }
+  function step(){ if(!alive) return; const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y}; if(h.x<0||h.y<0||h.x>=C||h.y>=R||snake.some(s=>s.x===h.x&&s.y===h.y)){alive=false;draw();return;} snake.unshift(h); if(h.x===food.x&&h.y===food.y){score++;place();} else snake.pop(); draw(); }
+  window.onkeydown=e=>{ if(e.key==='ArrowUp'&&dir.y===0) dir={x:0,y:-1}; if(e.key==='ArrowDown'&&dir.y===0) dir={x:0,y:1}; if(e.key==='ArrowLeft'&&dir.x===0) dir={x:-1,y:0}; if(e.key==='ArrowRight'&&dir.x===0) dir={x:1,y:0}; e.preventDefault(); };
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=b.dataset.d; if(d==='u'&&dir.y===0) dir={x:0,y:-1}; if(d==='d'&&dir.y===0) dir={x:0,y:1}; if(d==='l'&&dir.x===0) dir={x:-1,y:0}; if(d==='r'&&dir.x===0) dir={x:1,y:0};});
+  document.getElementById('rs').onclick=()=>{snake=[{x:10,y:8}];dir={x:1,y:0};score=0;alive=true;place();draw();};
+  place(); draw(); timer=setInterval(step,110);
+},
+
+memory(){
+  const icons=['🍎','⭐','🌙','🔥','💎','🎵','🚀','🌈'];
+  let cards=[...icons,...icons].sort(()=>Math.random()-0.5), open=[], locked=false, matched=0;
+  panel.innerHTML='<div class="mem" id="mem"></div><div class="score" id="sc">Matches: 0 / 8</div>';
+  const mem=document.getElementById('mem');
+  cards.forEach((ico,i)=>{
+    const b=document.createElement('button'); b.textContent='❓'; b.dataset.i=i;
+    b.onclick=()=>{
+      if(locked||b.classList.contains('open')||b.classList.contains('done')) return;
+      b.textContent=ico; b.classList.add('open'); open.push(b);
+      if(open.length===2){ locked=true; const [a,b2]=open;
+        if(cards[+a.dataset.i]===cards[+b2.dataset.i]){ a.classList.add('done'); b2.classList.add('done'); matched++; open=[]; locked=false; sc('Matches: '+matched+' / 8'+(matched===8?' — You win!':'')); }
+        else setTimeout(()=>{a.textContent='❓';b2.textContent='❓';a.classList.remove('open');b2.classList.remove('open');open=[];locked=false;},450);
+      }
+    };
+    mem.appendChild(b);
+  });
+},
+
+ttt(){
+  let board=Array(9).fill(''), over=false;
+  panel.innerHTML='<div class="ttt" id="ttt"></div><div class="msg" id="msg">Your turn (X)</div><div class="row"><button id="rs">Restart</button></div>';
+  const box=document.getElementById('ttt'), msg=document.getElementById('msg');
+  const wins=p=>{const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];return L.some(l=>l.every(i=>board[i]===p));};
+  function render(){ box.innerHTML=''; board.forEach((v,i)=>{ const b=document.createElement('button'); b.textContent=v||'';
+    b.onclick=()=>{ if(over||board[i]) return; board[i]='X'; if(wins('X')){over=true;msg.textContent='You win!';render();return;} if(board.every(x=>x)){over=true;msg.textContent='Draw!';render();return;}
+      render(); setTimeout(()=>{ const empty=board.map((x,i)=>x?'':i).filter(x=>x!==''); let move=null;
+        for(const i of empty){board[i]='O'; if(wins('O')) move=i; board[i]=''; if(move!=null) break;}
+        if(move==null) for(const i of empty){board[i]='X'; if(wins('X')) move=i; board[i]=''; if(move!=null) break;}
+        if(move==null) move=empty[Math.floor(Math.random()*empty.length)];
+        board[move]='O'; if(wins('O')){over=true;msg.textContent='Computer wins!';} else if(board.every(x=>x)){over=true;msg.textContent='Draw!';} else msg.textContent='Your turn (X)'; render();
+      },300); };
+    box.appendChild(b); }); }
+  document.getElementById('rs').onclick=()=>{board=Array(9).fill('');over=false;msg.textContent='Your turn (X)';render();}; render();
+},
+
+rps(){
+  let u=0,c=0;
+  panel.innerHTML='<div class="msg" id="msg">Pick one!</div><div class="row"><button data-m="rock">✊</button><button data-m="paper">✋</button><button data-m="scissors">✌</button></div><div class="score" id="sc">You 0 — 0 CPU</div>';
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{
+    const you=b.dataset.m, cpu=['rock','paper','scissors'][Math.floor(Math.random()*3)];
+    let res='Draw!';
+    if((you==='rock'&&cpu==='scissors')||(you==='paper'&&cpu==='rock')||(you==='scissors'&&cpu==='paper')){res='You win!';u++;}
+    else if(you!==cpu){res='CPU wins!';c++;}
+    document.getElementById('msg').textContent=`You: ${you} · CPU: ${cpu} · ${res}`;
+    sc(`You ${u} — ${c} CPU`);
+  });
+},
+
+guess(){
+  let n=Math.floor(Math.random()*50)+1, tries=0;
+  panel.innerHTML='<div class="msg">Guess 1–50</div><input type="number" id="g" min="1" max="50"><div class="row"><button id="go">Guess</button><button id="rs">New</button></div><div class="msg" id="msg"></div>';
+  document.getElementById('go').onclick=()=>{ const val=+document.getElementById('g').value; tries++; document.getElementById('msg').textContent=val===n?'Correct in '+tries+' tries!':val<n?'Too low':'Too high'; };
+  document.getElementById('rs').onclick=()=>{n=Math.floor(Math.random()*50)+1;tries=0;document.getElementById('msg').textContent='';document.getElementById('g').value='';};
+},
+
+react(){
+  panel.innerHTML='<div id="box" style="height:130px;border-radius:12px;background:#243044;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700">Wait for green...</div><div class="score" id="sc"></div><div class="row"><button id="rs">Try again</button></div>';
+  const box=document.getElementById('box'); let t0=0, ready=false, waiting=false;
+  function arm(){ box.style.background='#243044'; box.textContent='Wait for green...'; ready=false; waiting=true; sc(''); timer=setTimeout(()=>{ box.style.background='#6bcf9a'; box.textContent='CLICK!'; ready=true; t0=performance.now(); },1000+Math.random()*2000); }
+  box.onclick=()=>{ if(waiting&&!ready){ clearTimeout(timer); box.textContent='Too soon!'; waiting=false; return; } if(ready){ sc('Reaction: '+Math.round(performance.now()-t0)+' ms'); ready=false; waiting=false; box.textContent='Nice!'; } };
+  document.getElementById('rs').onclick=arm; arm();
+},
+
+whack(){
+  panel.innerHTML='<div id="holes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;max-width:220px;margin:0 auto"></div><div class="score" id="sc">Score: 0 · Time: 20</div>';
+  const holes=document.getElementById('holes'); let score=0, time=20, active=-1;
+  for(let i=0;i<9;i++){ const b=document.createElement('button'); b.style.cssText='aspect-ratio:1;border:0;border-radius:50%;background:#243044;font-size:1.4rem;cursor:pointer'; b.onclick=()=>{ if(i===active){ score++; active=-1; b.textContent=''; sc('Score: '+score+' · Time: '+time); } }; holes.appendChild(b); }
+  const btns=[...holes.children];
+  timer=setInterval(()=>{ time--; if(active>=0) btns[active].textContent=''; active=Math.floor(Math.random()*9); btns[active].textContent='🐹'; sc('Score: '+score+' · Time: '+time); if(time<=0){ clearInterval(timer); btns.forEach(b=>b.textContent=''); sc('Final: '+score); } },900);
+},
+
+clicker(){
+  panel.innerHTML='<div class="msg">Click as fast as you can!</div><div class="row"><button id="clk" style="font-size:1.15rem;padding:1rem 1.8rem">CLICK</button></div><div class="score" id="sc">Clicks: 0 · Time: 10</div><div class="row"><button id="rs">Start</button></div>';
+  let clicks=0, time=10, running=false;
+  document.getElementById('clk').onclick=()=>{ if(running){ clicks++; sc('Clicks: '+clicks+' · Time: '+time); } };
+  document.getElementById('rs').onclick=()=>{ clearInterval(timer); clicks=0; time=10; running=true; sc('Clicks: 0 · Time: 10'); timer=setInterval(()=>{ time--; sc('Clicks: '+clicks+' · Time: '+time); if(time<=0){ clearInterval(timer); running=false; sc('Done! '+clicks+' clicks'); } },1000); };
+},
+
+color(){
+  const colors=[{n:'Red',c:'#e88a8a'},{n:'Blue',c:'#5b9fd4'},{n:'Green',c:'#6bcf9a'},{n:'Yellow',c:'#e8d44d'},{n:'Purple',c:'#b48ce8'},{n:'Orange',c:'#e8a04a'}];
+  let score=0, round=0;
+  function next(){ if(round>=8){ panel.innerHTML='<div class="msg">Score: '+score+'/8</div><div class="row"><button id="rs">Again</button></div>'; document.getElementById('rs').onclick=()=>{score=0;round=0;next();}; return; }
+    round++; const target=colors[Math.floor(Math.random()*colors.length)]; let opts=[...colors].sort(()=>Math.random()-0.5).slice(0,4); if(!opts.find(o=>o.n===target.n)) opts[0]=target; opts.sort(()=>Math.random()-0.5);
+    panel.innerHTML='<div class="msg">What color is this?</div><div style="width:70px;height:70px;border-radius:12px;background:'+target.c+';margin:.5rem auto"></div><div class="row" id="opts"></div><div class="score">Round '+round+'/8 · Score '+score+'</div>';
+    opts.forEach(o=>{ const b=document.createElement('button'); b.textContent=o.n; b.onclick=()=>{ if(o.n===target.n) score++; next(); }; document.getElementById('opts').appendChild(b); });
+  } next();
+},
+
+type(){
+  const words=['dictionary','computer','adventure','science','galaxy','thunder','crystal','voyage','puzzle','platform'];
+  function newWord(){ const word=words[Math.floor(Math.random()*words.length)]; const t0=performance.now();
+    panel.innerHTML='<div class="msg">Type this:</div><div style="font-size:1.3rem;font-weight:800;color:var(--accent);margin:.4rem 0">'+word+'</div><input type="text" id="tw" autocomplete="off" style="width:90%"><div class="msg" id="msg"></div><div class="row"><button id="nw">New word</button></div>';
+    const inp=document.getElementById('tw'); inp.focus();
+    inp.oninput=()=>{ if(inp.value.toLowerCase()===word) document.getElementById('msg').textContent='Done in '+((performance.now()-t0)/1000).toFixed(2)+'s!'; };
+    document.getElementById('nw').onclick=newWord;
+  } newWord();
+},
+
+pong(){
+  const c=canvas(320,220), ctx=c.getContext('2d');
+  document.getElementById('ctrls').innerHTML='<span style="color:var(--muted);font-size:.8rem">Mouse / touch to move paddle</span>';
+  let px=120, ball={x:160,y:110,vx:2.5,vy:-2.5}, score=0, lives=3;
+  c.onmousemove=e=>{ const r=c.getBoundingClientRect(); px=Math.max(0,Math.min(260,(e.clientX-r.left)*(320/r.width)-30)); };
+  c.ontouchmove=e=>{ e.preventDefault(); const r=c.getBoundingClientRect(); px=Math.max(0,Math.min(260,(e.touches[0].clientX-r.left)*(320/r.width)-30)); };
+  function loop(){
+    ball.x+=ball.vx; ball.y+=ball.vy;
+    if(ball.x<5||ball.x>315) ball.vx*=-1;
+    if(ball.y<5) ball.vy*=-1;
+    if(ball.y>200&&ball.x>px&&ball.x<px+60){ ball.vy=-Math.abs(ball.vy); ball.y=200; score++; }
+    if(ball.y>220){ lives--; ball={x:160,y:110,vx:2.5,vy:-2.5}; if(lives<=0){ sc('Game over! Score: '+score); return; } }
+    ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,320,220);
+    ctx.fillStyle='#5b9fd4'; ctx.fillRect(px,205,60,8);
+    ctx.fillStyle='#6bcf9a'; ctx.beginPath(); ctx.arc(ball.x,ball.y,6,0,6.28); ctx.fill();
+    sc('Score: '+score+' · Lives: '+lives);
+    raf=requestAnimationFrame(loop);
+  } loop();
+},
+
+breakout(){
+  const c=canvas(320,240), ctx=c.getContext('2d');
+  let px=130, ball={x:160,y:200,vx:2.2,vy:-2.5}, bricks=[], score=0;
+  for(let r=0;r<4;r++) for(let col=0;col<8;col++) bricks.push({x:10+col*38,y:20+r*18,w:34,h:12,alive:true});
+  c.onmousemove=e=>{ const r=c.getBoundingClientRect(); px=Math.max(0,Math.min(260,(e.clientX-r.left)*(320/r.width)-30)); };
+  function loop(){
+    ball.x+=ball.vx; ball.y+=ball.vy;
+    if(ball.x<5||ball.x>315) ball.vx*=-1; if(ball.y<5) ball.vy*=-1;
+    if(ball.y>220&&ball.x>px&&ball.x<px+60){ ball.vy=-Math.abs(ball.vy); ball.y=220; }
+    if(ball.y>240){ sc('Game over! Score: '+score); return; }
+    bricks.forEach(b=>{ if(!b.alive) return; if(ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){ b.alive=false; ball.vy*=-1; score+=10; } });
+    if(bricks.every(b=>!b.alive)){ sc('You win! Score: '+score); return; }
+    ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,320,240);
+    ctx.fillStyle='#e88a8a'; bricks.filter(b=>b.alive).forEach(b=>ctx.fillRect(b.x,b.y,b.w,b.h));
+    ctx.fillStyle='#5b9fd4'; ctx.fillRect(px,228,60,8);
+    ctx.fillStyle='#6bcf9a'; ctx.beginPath(); ctx.arc(ball.x,ball.y,5,0,6.28); ctx.fill();
+    sc('Score: '+score);
+    raf=requestAnimationFrame(loop);
+  } loop();
+},
+
+flappy(){
+  const c=canvas(300,240), ctx=c.getContext('2d');
+  document.getElementById('ctrls').innerHTML='<button id="flap">Flap</button>';
+  let y=100, vy=0, pipes=[{x:300,gap:80}], score=0, dead=false;
+  function flap(){ if(!dead) vy=-5; }
+  document.getElementById('flap').onclick=flap;
+  window.onkeydown=e=>{ if(e.key===' '||e.key==='ArrowUp'){ flap(); e.preventDefault(); } };
+  c.onclick=flap;
+  function loop(){
+    if(dead){ sc('Game over! Score: '+score); return; }
+    vy+=0.28; y+=vy;
+    pipes.forEach(p=>p.x-=2.2);
+    if(pipes[0].x<-40){ pipes.shift(); pipes.push({x:300,gap:50+Math.random()*80}); score++; }
+    const p=pipes[0];
+    if(p.x<40&&p.x>0&&(y<p.gap||y>p.gap+70)) dead=true;
+    if(y>230||y<0) dead=true;
+    ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,300,240);
+    ctx.fillStyle='#6bcf9a'; pipes.forEach(p=>{ ctx.fillRect(p.x,0,36,p.gap); ctx.fillRect(p.x,p.gap+70,36,240); });
+    ctx.fillStyle='#e8d44d'; ctx.fillRect(30,y,16,16);
+    sc('Score: '+score);
+    raf=requestAnimationFrame(loop);
+  } loop();
+},
+
+dodge(){
+  const c=canvas(300,240), ctx=c.getContext('2d');
+  let x=140, rocks=[], score=0, dead=false;
+  window.onkeydown=e=>{ if(e.key==='ArrowLeft') x=Math.max(0,x-20); if(e.key==='ArrowRight') x=Math.min(280,x+20); e.preventDefault(); };
+  c.onclick=e=>{ const r=c.getBoundingClientRect(); x=Math.max(0,Math.min(280,(e.clientX-r.left)*(300/r.width)-10)); };
+  timer=setInterval(()=>rocks.push({x:Math.random()*280,y:-20,s:2+Math.random()*2}),500);
+  function loop(){
+    if(dead){ sc('Game over! Survived: '+score); return; }
+    score++;
+    rocks.forEach(r=>r.y+=r.s);
+    rocks=rocks.filter(r=>{ if(r.y>220&&r.y<240&&Math.abs(r.x-x)<18) dead=true; return r.y<260; });
+    ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,300,240);
+    ctx.fillStyle='#e88a8a'; rocks.forEach(r=>{ ctx.beginPath(); ctx.arc(r.x,r.y,10,0,6.28); ctx.fill(); });
+    ctx.fillStyle='#5b9fd4'; ctx.fillRect(x,220,20,14);
+    sc('Score: '+score+' · ← → or tap');
+    raf=requestAnimationFrame(loop);
+  } loop();
+},
+
+aim(){
+  const c=canvas(300,220), ctx=c.getContext('2d');
+  let targets=[], score=0, time=20;
+  function spawn(){ targets.push({x:30+Math.random()*240,y:30+Math.random()*140,r:14+Math.random()*10,life:100}); }
+  for(let i=0;i<3;i++) spawn();
+  c.onclick=e=>{ const r=c.getBoundingClientRect(), mx=(e.clientX-r.left)*(300/r.width), my=(e.clientY-r.top)*(220/r.height);
+    targets=targets.filter(t=>{ const hit=Math.hypot(t.x-mx,t.y-my)<t.r; if(hit) score++; return !hit; });
+  };
+  timer=setInterval(()=>{ time--; spawn(); if(time<=0){ clearInterval(timer); sc('Final score: '+score); } },1000);
+  function loop(){ if(time<=0) return; ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,300,220);
+    ctx.fillStyle='#e88a8a'; targets.forEach(t=>{ ctx.beginPath(); ctx.arc(t.x,t.y,t.r,0,6.28); ctx.fill(); });
+    sc('Score: '+score+' · Time: '+time); raf=requestAnimationFrame(loop); }
+  loop();
+},
+
+math(){
+  let score=0, round=0;
+  function next(){
+    if(round>=10){ panel.innerHTML='<div class="msg">Score: '+score+'/10</div><div class="row"><button id="rs">Again</button></div>'; document.getElementById('rs').onclick=()=>{score=0;round=0;next();}; return; }
+    round++; const a=1+Math.floor(Math.random()*12), b=1+Math.floor(Math.random()*12), op=['+','-','×'][Math.floor(Math.random()*3)];
+    let ans=op==='+'?a+b:op==='-'?a-b:a*b; if(op==='-'&&b>a){ ans=b-a; panel.innerHTML=`<div class="msg">${b} − ${a} = ?</div>`; } else panel.innerHTML=`<div class="msg">${a} ${op} ${b} = ?</div>`;
+    const opts=new Set([ans]); while(opts.size<4) opts.add(ans+Math.floor(Math.random()*11)-5);
+    panel.innerHTML+=`<div class="row" id="opts"></div><div class="score">Q ${round}/10 · Score ${score}</div>`;
+    [...opts].sort(()=>Math.random()-0.5).forEach(o=>{ const btn=document.createElement('button'); btn.textContent=o; btn.onclick=()=>{ if(o===ans) score++; next(); }; document.getElementById('opts').appendChild(btn); });
+  } next();
+},
+
+simon(){
+  const cols=['#e88a8a','#5b9fd4','#6bcf9a','#e8d44d'];
+  let seq=[], player=[], step=0, playing=false;
+  panel.innerHTML='<div id="pads" style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;max-width:180px;margin:0 auto"></div><div class="score" id="sc">Watch...</div><div class="row"><button id="start">Start</button></div>';
+  const pads=document.getElementById('pads');
+  cols.forEach((c,i)=>{ const b=document.createElement('button'); b.style.cssText=`height:70px;border:0;border-radius:10px;background:${c};opacity:.45;cursor:pointer`; b.dataset.i=i; pads.appendChild(b); });
+  const btns=[...pads.children];
+  function flash(i){ return new Promise(res=>{ btns[i].style.opacity='1'; setTimeout(()=>{ btns[i].style.opacity='.45'; setTimeout(res,150); },350); }); }
+  async function playSeq(){ playing=true; sc('Watch...'); for(const i of seq) await flash(i); playing=false; player=[]; sc('Your turn'); }
+  document.getElementById('start').onclick=async()=>{ seq=[Math.floor(Math.random()*4)]; await playSeq(); };
+  btns.forEach(b=>b.onclick=async()=>{ if(playing||!seq.length) return; const i=+b.dataset.i; player.push(i); await flash(i);
+    if(player[player.length-1]!==seq[player.length-1]){ sc('Wrong! Score: '+(seq.length-1)); seq=[]; return; }
+    if(player.length===seq.length){ sc('Good! Level '+seq.length); seq.push(Math.floor(Math.random()*4)); setTimeout(playSeq,500); }
+  });
+},
+
+maze(){
+  const c=canvas(280,280), ctx=c.getContext('2d'), N=10, S=28;
+  // simple maze generation
+  const grid=Array.from({length:N},()=>Array(N).fill(1));
+  function carve(x,y){ grid[y][x]=0; const dirs=[[0,-1],[1,0],[0,1],[-1,0]].sort(()=>Math.random()-0.5);
+    for(const [dx,dy] of dirs){ const nx=x+dx*2, ny=y+dy*2; if(ny>=0&&ny<N&&nx>=0&&nx<N&&grid[ny][nx]===1){ grid[y+dy][x+dx]=0; carve(nx,ny); } } }
+  carve(0,0); grid[N-1][N-1]=0;
+  let px=0, py=0;
+  window.onkeydown=e=>{ let nx=px, ny=py; if(e.key==='ArrowLeft') nx--; if(e.key==='ArrowRight') nx++; if(e.key==='ArrowUp') ny--; if(e.key==='ArrowDown') ny++;
+    if(nx>=0&&ny>=0&&nx<N&&ny<N&&grid[ny][nx]===0){ px=nx; py=ny; } e.preventDefault(); draw();
+    if(px===N-1&&py===N-1) sc('You escaped!'); };
+  function draw(){ ctx.fillStyle='#0a0e14'; ctx.fillRect(0,0,280,280);
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){ ctx.fillStyle=grid[y][x]?'#2a3548':'#121a24'; ctx.fillRect(x*S,y*S,S-1,S-1); }
+    ctx.fillStyle='#6bcf9a'; ctx.fillRect((N-1)*S+6,(N-1)*S+6,S-12,S-12);
+    ctx.fillStyle='#5b9fd4'; ctx.fillRect(px*S+6,py*S+6,S-12,S-12);
+    sc('Arrow keys · Reach the green exit'); }
+  draw();
+},
+
+slider(){
+  let tiles=[1,2,3,4,5,6,7,8,0], empty=8;
+  function shuffle(){ for(let i=0;i<80;i++){ const moves=[]; const x=empty%3,y=Math.floor(empty/3);
+      [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy])=>{ const nx=x+dx,ny=y+dy; if(nx>=0&&nx<3&&ny>=0&&ny<3) moves.push(ny*3+nx); });
+      const m=moves[Math.floor(Math.random()*moves.length)]; tiles[empty]=tiles[m]; tiles[m]=0; empty=m; } }
+  shuffle();
+  function render(){
+    panel.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;max-width:180px;margin:0 auto" id="sl"></div><div class="score" id="sc">Slide tiles into order</div><div class="row"><button id="rs">Shuffle</button></div>';
+    const sl=document.getElementById('sl');
+    tiles.forEach((t,i)=>{ const b=document.createElement('button'); b.textContent=t||''; b.style.cssText='aspect-ratio:1;border:0;border-radius:8px;background:'+(t?'#243044':'#0a0e14')+';color:var(--text);font-size:1.3rem;font-weight:800;cursor:pointer';
+      b.onclick=()=>{ const x=empty%3,y=Math.floor(empty/3), tx=i%3, ty=Math.floor(i/3); if(Math.abs(x-tx)+Math.abs(y-ty)===1){ tiles[empty]=tiles[i]; tiles[i]=0; empty=i; render(); if(tiles.every((v,idx)=>idx===8?v===0:v===idx+1)) sc('Solved!'); } };
+      sl.appendChild(b); });
+    document.getElementById('rs').onclick=()=>{ shuffle(); render(); };
+  } render();
+}
+};
+</script></body></html>

@@ -168,7 +168,7 @@ function render(r){
   h+='<div class="field"><div class="lab">Sentence</div><div class="val">'+esc(sentence)+'</div></div>';
   h+='<div class="field syn"><div class="lab">Synonyms</div><div class="val">'+(syn.length?synLinks:'<span style="color:var(--muted)">None found</span>')+'</div></div>';
   h+='<div class="field ant"><div class="lab">Antonyms</div><div class="val">'+(ant.length?antLinks:'<span style="color:var(--muted)">None found</span>')+'</div></div>';
-  h+='<div class="glinks"><a href="'+gq(w)+'" target="_blank" rel="noopener">Google: '+esc(w)+'</a> <a href="'+gq(w+' definition')+'" target="_blank" rel="noopener">Google: definition</a> <a href="'+gq(w+' sentence example')+'" target="_blank" rel="noopener">Google: sentence</a></div>';
+  h+='<div class="glinks"><a href="'+gq(w)+'" target="_blank" rel="noopener">Google: '+esc(w)+'</a> <a href="'+gq(w+' definition')+'" target="_blank" rel="noopener">Google: definition</a> <a href="'+gq(w+' synonyms')+'" target="_blank" rel="noopener">Google: synonyms</a> <a href="'+gq(w+' antonyms')+'" target="_blank" rel="noopener">Google: antonyms</a> <a href="'+gq(w+' sentence example')+'" target="_blank" rel="noopener">Google: sentence</a></div>';
   if(isSnakeWord(w)){
     h+='<div class="snake-wrap"><h3>🐍 Snake Game</h3>';
     h+='<canvas id="snakeCanvas" width="320" height="256"></canvas>';

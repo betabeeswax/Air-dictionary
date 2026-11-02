@@ -20,12 +20,29 @@ button#go{padding:.75rem 1.1rem;border:0;border-radius:12px;background:var(--acc
 .word{font-size:1.8rem;font-weight:800}
 .pos{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--accent);background:#5b9fd422;padding:.15rem .45rem;border-radius:6px;margin-top:.25rem}
 .field{background:#121a24;border:1px solid var(--border);border-radius:10px;padding:.65rem .75rem;margin-top:.55rem}
+.def-line{padding:.35rem 0;border-bottom:1px solid #2a354855;line-height:1.45}
+.def-line:last-child{border-bottom:0;padding-bottom:0}
+.def-line:first-child{padding-top:0}
+.def-num{color:var(--accent);font-weight:700;font-size:.8rem;margin-right:.35rem}
 .lab{color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem}
 .val{font-size:.95rem;line-height:1.4}
 .field.syn .val a{color:#b6e6cc;text-decoration:underline;margin-right:.4rem}
 .field.ant .val a{color:#f0b4b4;text-decoration:underline;margin-right:.4rem}
 .glinks{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
-.glinks a{display:inline-block;padding:.3rem .55rem;border-radius:8px;border:1px solid var(--border);background:#243044;color:var(--accent);text-decoration:none;font-size:.8rem;font-weight:600}
+.glinks a,.glinks button,.gbtn-in{display:inline-block;padding:.35rem .65rem;border-radius:8px;border:1px solid var(--border);background:#243044;color:var(--accent);text-decoration:none;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit}
+.gbtn-in:hover,.gbtn-in.on{background:var(--accent);color:#041018;border-color:var(--accent)}
+.in-panel{margin-top:.65rem;padding:.75rem;background:#121a24;border:1px solid var(--border);border-radius:10px;text-align:left}
+.in-panel .ip-lab{color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase;margin-bottom:.35rem}
+.in-panel .ip-body{font-size:.95rem;line-height:1.45}
+.in-panel a{color:#b6e6cc;margin-right:.4rem}
+
+
+
+
+
+
+
+
 .suggestions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
 .suggestions button{background:var(--card);color:var(--accent);border:1px solid var(--border);font-weight:600;padding:.4rem .7rem;border-radius:10px;cursor:pointer}
 .empty{text-align:center;color:var(--muted);padding:2rem}
@@ -39,6 +56,15 @@ footer a{color:var(--accent)}
 .snake-btns button{padding:.4rem .8rem;border:0;border-radius:8px;background:var(--accent);color:#041018;font-weight:700;cursor:pointer;font-size:.85rem}
 .snake-score{color:var(--muted);font-size:.85rem;margin-top:.35rem}
 
+
+
+.g-embed{display:none;position:fixed;inset:0;z-index:99999;background:var(--bg)}
+.g-embed.show{display:block}
+.g-embed-box{display:flex;flex-direction:column;height:100%;width:100%}
+.g-embed-bar{display:flex;align-items:center;gap:.6rem;padding:.65rem 1rem;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
+.g-embed-bar .ttl{flex:1;font-size:.9rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-back{padding:.45rem .9rem;border-radius:10px;border:0;background:var(--accent);color:#041018;font-weight:800;font-size:.9rem;cursor:pointer;font-family:inherit}
+.g-embed-frame{flex:1;width:100%;border:0;background:#fff}
 </style></head><body>
 <div class="wrap">
   <div class="logo">
@@ -62,7 +88,25 @@ const DATA=[{"w":"A","d":"the unit symbol for the ampere, the basic unit of elec
 const byWord=new Map(); DATA.forEach(r=>byWord.set(r.w.toLowerCase(),r));
 const q=document.getElementById('q'),out=document.getElementById('out'),status=document.getElementById('status');
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 function gq(x){return 'https://www.google.com/search?q='+encodeURIComponent(x);}
+function openEmbed(query,label){
+  var url=gq(query);
+  var box=document.getElementById('gEmbed');
+  var frame=document.getElementById('gEmbedFrame');
+  var title=document.getElementById('gEmbedTitle');
+  if(title) title.textContent=(label||'Google')+' — '+query;
+  if(frame) frame.src=url;
+  if(box) box.classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeEmbed(){
+  var box=document.getElementById('gEmbed');
+  var frame=document.getElementById('gEmbedFrame');
+  if(box) box.classList.remove('show');
+  if(frame) frame.src='about:blank';
+  document.body.style.overflow='';
+}
 
 function isSnakeWord(w){
   const ch=(w||'')[0]?.toLowerCase();
@@ -133,13 +177,55 @@ function easterEgg(w){
   return '';
 }
 function improveSentence(r){
-  let s=r.E||'';
-  if(!s || /^A .+ is something people describe as:/.test(s)){
-    if(r.d) return 'Example: "'+r.w+'" — '+r.d.split(' · ')[0];
-    return 'Example: people use the word "'+r.w+'" when they talk or write about this idea.';
+  const w=r.w||'';
+  let s=(r.E||'').trim();
+  // Keep stored example only if it looks like a real sentence
+  const bad=/^(A .+ is something people describe as:|Example:|You might .+ when you need to:|It felt .+ meaning|People use the word)/i;
+  if(s && !bad.test(s) && s.length>12 && new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(s)){
+    // Capitalize first letter if needed
+    return s.charAt(0).toUpperCase()+s.slice(1);
   }
-  return s;
+  const pos=(r.p||'').toLowerCase();
+  const def=((r.d||'').split(' · ')[0]||'').toLowerCase();
+  // Real-sounding templates by part of speech
+  if(/\bverb\b/.test(pos)){
+    const opts=[
+      'She decided to '+w+' before anyone else arrived.',
+      'They had to '+w+' carefully to avoid mistakes.',
+      'Please '+w+' when you get a chance.',
+      'He did not want to '+w+', but he had no choice.'
+    ];
+    return opts[Math.abs(hash(w))%opts.length];
+  }
+  if(/\badjective\b|\badj\b/.test(pos)){
+    const opts=[
+      'It was a '+w+' moment that no one forgot.',
+      'The room felt '+w+' after they left.',
+      'Everyone said it was a '+w+' idea.',
+      'Her answer sounded '+w+' and clear.'
+    ];
+    return opts[Math.abs(hash(w))%opts.length];
+  }
+  if(/\badverb\b/.test(pos)){
+    const opts=[
+      'She spoke '+w+' so the whole class could hear.',
+      'They finished the work '+w+' and went home.',
+      'He moved '+w+' through the quiet hallway.'
+    ];
+    return opts[Math.abs(hash(w))%opts.length];
+  }
+  // noun / default — real sentences, not definitions
+  const opts=[
+    'The '+w+' sat on the table near the window.',
+    'We talked about the '+w+' for a long time.',
+    'A single '+w+' can change the whole story.',
+    'They found the '+w+' after searching for hours.',
+    'In class we learned about the '+w+'.'
+  ];
+  return opts[Math.abs(hash(w))%opts.length];
 }
+function hash(s){let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return h;}
+
 function suggest(term){
   const t=term.toLowerCase();
   const out=[];
@@ -164,11 +250,24 @@ function render(r){
   const antLinks=ant.map(a=>'<a href="#" onclick="q.value=\''+esc(a)+'\';search();return false;">'+esc(a)+'</a>').join(' ');
   let h='<div class="card">'+easterEgg(w)+'<div class="word">'+esc(w)+'</div>';
   if(pos) h+='<div class="pos">'+esc(pos)+'</div>';
-  if(def) h+='<div class="field"><div class="lab">Definition</div><div class="val">'+esc(def)+'</div></div>';
-  h+='<div class="field"><div class="lab">Sentence</div><div class="val">'+esc(sentence)+'</div></div>';
+  if(def){
+    const parts=def.split(' · ').map(function(x){return x.trim();}).filter(Boolean);
+    let defHtml=parts.map(function(p,i){return '<div class="def-line"><span class="def-num">'+(i+1)+'.</span>'+esc(p)+'</div>';}).join('');
+    h+='<div class="field"><div class="lab">Definition</div><div class="val">'+defHtml+'</div></div>';
+  }
+  h+='<div class="field"><div class="lab">Example sentence</div><div class="val">'+esc(sentence)+'</div></div>';
   h+='<div class="field syn"><div class="lab">Synonyms</div><div class="val">'+(syn.length?synLinks:'<span style="color:var(--muted)">None found</span>')+'</div></div>';
   h+='<div class="field ant"><div class="lab">Antonyms</div><div class="val">'+(ant.length?antLinks:'<span style="color:var(--muted)">None found</span>')+'</div></div>';
-  h+='<div class="glinks"><a href="'+gq(w)+'" target="_blank" rel="noopener">Google: '+esc(w)+'</a> <a href="'+gq(w+' definition')+'" target="_blank" rel="noopener">Google: definition</a> <a href="'+gq(w+' synonyms')+'" target="_blank" rel="noopener">Google: synonyms</a> <a href="'+gq(w+' antonyms')+'" target="_blank" rel="noopener">Google: antonyms</a> <a href="'+gq(w+' sentence example')+'" target="_blank" rel="noopener">Google: sentence</a></div>';
+  
+  
+  
+  h+='<div class="glinks">';
+  h+='<button type="button" class="g-open" data-q="'+esc(w)+' definition" data-label="Definition">Google: definition</button> ';
+  h+='<button type="button" class="g-open" data-q="'+esc(w)+' synonyms" data-label="Synonyms">Google: synonyms</button> ';
+  h+='<button type="button" class="g-open" data-q="'+esc(w)+' antonyms" data-label="Antonyms">Google: antonyms</button> ';
+  h+='<button type="button" class="g-open" data-q="'+esc(w)+' sentence example" data-label="Sentence">Google: sentence</button>';
+  h+='</div>';
+
   if(isSnakeWord(w)){
     h+='<div class="snake-wrap"><h3>🐍 Snake Game</h3>';
     h+='<canvas id="snakeCanvas" width="320" height="256"></canvas>';
@@ -203,4 +302,75 @@ function search(){
 }
 document.getElementById('go').addEventListener('click',search);
 q.addEventListener('keydown',e=>{if(e.key==='Enter')search();});
-</script></body></html>
+
+document.getElementById('out').addEventListener('click',function(e){
+  const btn=e.target.closest('.gbtn-in');
+  if(!btn) return;
+  e.preventDefault();
+  const panel=document.getElementById('inPanel');
+  if(!panel) return;
+  const card=btn.closest('.card');
+  if(!card) return;
+  // get current word from card
+  const wordEl=card.querySelector('.word');
+  const w=wordEl?wordEl.textContent.trim():'';
+  const r=byWord.get(w.toLowerCase());
+  if(!r) return;
+  document.querySelectorAll('.gbtn-in').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  const kind=btn.getAttribute('data-panel');
+  let html='';
+  if(kind==='def'){
+    const parts=(r.d||'').split(' · ').map(function(x){return x.trim();}).filter(Boolean);
+    html='<div class="ip-lab">Definition</div><div class="ip-body">';
+    if(parts.length) parts.forEach(function(p,i){html+='<div class="def-line"><span class="def-num">'+(i+1)+'.</span>'+esc(p)+'</div>';});
+    else html+='<span style="color:var(--muted)">No definition in app</span>';
+    html+='</div>';
+  } else if(kind==='syn'){
+    const syn=[...new Set((r.S||[]).filter(function(s){return s&&s.length>1&&s.toLowerCase()!==w.toLowerCase();}))];
+    html='<div class="ip-lab">Synonyms in this app</div><div class="ip-body">';
+    if(syn.length) syn.forEach(function(s){html+='<a href="#" onclick="q.value=\\''+esc(s)+'\\';search();return false;">'+esc(s)+'</a> ';});
+    else html+='<span style="color:var(--muted)">None in app data</span>';
+    html+='</div>';
+  } else if(kind==='ant'){
+    const ant=[...new Set((r.A||[]).filter(function(a){return a&&a.length>1&&a.toLowerCase()!==w.toLowerCase();}))];
+    html='<div class="ip-lab">Antonyms in this app</div><div class="ip-body">';
+    if(ant.length) ant.forEach(function(a){html+='<a href="#" onclick="q.value=\\''+esc(a)+'\\';search();return false;">'+esc(a)+'</a> ';});
+    else html+='<span style="color:var(--muted)">None in app data</span>';
+    html+='</div>';
+  } else if(kind==='sent'){
+    html='<div class="ip-lab">Example sentence</div><div class="ip-body">'+esc(improveSentence(r))+'</div>';
+  }
+  panel.innerHTML=html;
+  panel.style.display='block';
+});
+
+
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if(t && t.classList && t.classList.contains('g-open')){
+    e.preventDefault();
+    openEmbed(t.getAttribute('data-q') || '', t.getAttribute('data-label') || 'Google');
+  }
+  if(t && (t.id === 'gBackBtn' || (t.classList && t.classList.contains('g-back')))){
+    e.preventDefault();
+    closeEmbed();
+  }
+});
+
+</script>
+
+</div>
+
+
+<div class="g-embed" id="gEmbed">
+  <div class="g-embed-box">
+    <div class="g-embed-bar">
+      <button type="button" class="g-back" id="gBackBtn">← Back</button>
+      <span class="ttl" id="gEmbedTitle">Google</span>
+    </div>
+    <iframe class="g-embed-frame" id="gEmbedFrame" title="Google"></iframe>
+  </div>
+</div>
+
+</body></html>
